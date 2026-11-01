@@ -1,0 +1,731 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Count and Read</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: one tall, thumb-friendly column. Home is a grid of big activity tiles, each activity is one question at a time with large answer buttons, and every finished round ends on a winner screen with a trophy, confetti and a song that uses the child's name. */
+:root {
+  --bg: #E8F3FF;
+  --card: #FFFFFF;
+  --ink: #1B2B4B;
+  --muted: #4B5D86;
+  --line: #C3D7F2;
+  --coral: #D93F31;
+  --leaf: #0F8F66;
+  --berry: #6347E8;
+  --sky: #1B73E0;
+  --pink: #C93A7F;
+  --teal: #0C7C93;
+  --orange: #B85408;
+  --indigo: #3B4BB5;
+  --plum: #8B3AA6;
+  --olive: #5B7A12;
+  --sienna: #A0522D;
+  --sun: #FFC534;
+  --sun-soft: #FFF1C2;
+  --bad-bg: #FFE3DF;
+  --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Andika", "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.45;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+#app { max-width: 720px; margin: 0 auto; }
+button { font-family: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; margin: 0; text-wrap: balance; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 3px solid var(--line); border-radius: 999px; padding: 6px 16px; font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; min-height: 48px; }
+.pill svg { width: 26px; height: 26px; }
+.ghost { background: var(--card); border: 3px solid var(--line); border-radius: 999px; padding: 6px 18px; min-height: 48px; font-weight: 700; font-size: 1rem; }
+.ghost:hover { border-color: var(--ink); }
+
+/* Home */
+.hello h1 { font-size: clamp(2.2rem, 8vw, 3.4rem); font-weight: 800; }
+.hello p { margin: 8px 0 0; color: var(--muted); font-size: 1.1rem; }
+.namebox { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 16px 0 4px; }
+.namebox label { font-weight: 700; }
+.namebox input { font: inherit; font-size: 1.1rem; padding: 8px 14px; border: 3px solid var(--line); border-radius: 14px; background: var(--card); color: var(--ink); min-width: 0; width: 12em; max-width: 100%; }
+.namehint { margin: 0; font-size: .95rem; color: var(--muted); }
+.group { margin-top: 26px; }
+.group h2 { font-size: 1.15rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; font-weight: 800; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 14px; }
+.tile { text-align: left; border: 0; border-radius: 22px; padding: 16px 16px 14px; background: var(--a); color: var(--a-ink, #fff); display: flex; flex-direction: column; gap: 6px; min-height: 140px; min-width: 0; box-shadow: 0 6px 0 rgba(27,43,75,.28); transition: transform .12s; }
+.tile:hover { transform: translateY(-2px); }
+.tile:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(27,43,75,.28); }
+.tile .big { font-family: var(--font-display); font-weight: 800; font-size: 2.3rem; line-height: 1.05; min-height: 2.4rem; display: flex; align-items: center; }
+.tile .name { font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; line-height: 1.05; }
+.tile .sub { font-size: .9rem; opacity: .95; }
+.grownups { margin-top: 34px; background: var(--card); border: 3px solid var(--line); border-radius: 20px; padding: 6px 18px; }
+.grownups summary { cursor: pointer; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; padding: 12px 0; }
+.grownups div { padding-bottom: 14px; font-size: 1rem; color: var(--muted); }
+.grownups ul { padding-left: 20px; margin: 8px 0; }
+.grownups li { margin: 4px 0; }
+
+/* Activity */
+.dots { display: flex; gap: 8px; margin-bottom: 14px; }
+.dots span { flex: 1; height: 12px; border-radius: 99px; background: var(--line); }
+.dots span.on { background: var(--a); }
+.dots span.now { background: var(--sun); }
+.card { background: var(--card); border: 3px solid var(--line); border-radius: 26px; padding: 22px 18px; display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+.card.pop { animation: pop .45s ease; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+.prompt { font-size: clamp(1.5rem, 5.5vw, 2rem); font-family: var(--font-display); font-weight: 800; }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.speak { width: 56px; height: 56px; border-radius: 50%; border: 3px solid var(--line); background: var(--sun-soft); display: grid; place-items: center; flex: none; }
+.speak:hover { border-color: var(--ink); }
+.speak svg { width: 28px; height: 28px; }
+.bigtext { font-family: var(--font-body); font-weight: 700; font-size: clamp(4rem, 22vw, 7rem); line-height: 1; color: var(--a); }
+.bigword { font-family: var(--font-body); font-weight: 700; font-size: clamp(3rem, 16vw, 5rem); line-height: 1; color: var(--a); }
+.eq { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.4rem, 11vw, 3.6rem); letter-spacing: .02em; }
+.shapes { display: grid; grid-template-columns: repeat(5, minmax(0, 56px)); gap: 8px; }
+.shape { position: relative; border: 0; background: transparent; padding: 0; width: 100%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 14px; }
+.shape svg { width: 86%; height: 86%; }
+.shape:hover { background: var(--sun-soft); }
+.shape .num { position: absolute; right: -2px; bottom: -2px; background: var(--ink); color: #fff; border-radius: 999px; min-width: 26px; height: 26px; font-family: var(--font-display); font-weight: 800; font-size: .95rem; display: none; place-items: center; padding: 0 6px; }
+.shape.counted .num { display: grid; }
+.shape.counted svg { opacity: .55; }
+.group-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.mini { display: flex; flex-wrap: wrap; gap: 6px; max-width: 230px; }
+.mini .s { width: 42px; height: 42px; position: relative; }
+.mini .s svg { width: 100%; height: 100%; }
+.mini .s.gone svg { opacity: .3; }
+.mini .s.gone::after { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 5px; background: var(--ink); border-radius: 4px; transform: rotate(-35deg); }
+.op { font-family: var(--font-display); font-weight: 800; font-size: 2.4rem; }
+.seq { display: flex; gap: 10px; flex-wrap: wrap; }
+.seq span { min-width: 64px; height: 76px; border-radius: 16px; border: 3px solid var(--line); background: var(--card); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 2.3rem; padding: 0 10px; }
+.seq span.q { background: var(--sun-soft); border: 3px dashed var(--ink); }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.side { border: 3px solid var(--line); border-radius: 18px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.side b { font-family: var(--font-display); font-size: 1.1rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.side .mini { max-width: 100%; }
+.side .mini .s { width: 36px; height: 36px; }
+.bigshape svg { width: min(52vw, 180px); height: auto; }
+
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
+.choice { min-height: 84px; border-radius: 20px; border: 3px solid var(--line); background: var(--card); font-family: var(--font-body); font-weight: 700; font-size: 2.2rem; box-shadow: 0 5px 0 var(--line); min-width: 0; overflow-wrap: anywhere; padding: 8px; }
+.choice.words { font-size: 1.7rem; }
+.choice:hover:not(:disabled) { border-color: var(--a); }
+.choice:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 var(--line); }
+.choice.right { background: var(--leaf); border-color: var(--leaf); color: #fff; box-shadow: 0 5px 0 #0A6A4B; }
+.choice.wrong { background: var(--bad-bg); border-color: var(--coral); color: var(--muted); box-shadow: none; }
+.choice:disabled:not(.right):not(.wrong) { opacity: .6; cursor: default; }
+.feedback { min-height: 2.6rem; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; }
+.feedback.ok { color: var(--leaf); }
+.feedback.no { color: var(--coral); }
+.next { align-self: flex-start; border: 0; border-radius: 18px; background: var(--a); color: var(--a-ink, #fff); font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; padding: 12px 30px; min-height: 60px; box-shadow: 0 5px 0 rgba(27,43,75,.3); }
+.next[hidden] { display: none !important; }
+
+/* Winner screen */
+.winner { align-items: flex-start; position: relative; overflow: hidden; }
+.winner .trophy { width: 120px; height: 120px; animation: bounce 1.2s ease-in-out infinite; }
+@keyframes bounce { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+.banner { background: var(--sun); color: var(--ink); padding: 10px 20px; border-radius: 16px; font-family: var(--font-display); font-weight: 800; font-size: clamp(1.7rem, 7vw, 2.6rem); line-height: 1.1; overflow-wrap: anywhere; box-shadow: 0 5px 0 #B9860A; }
+.stars-big { display: flex; gap: 6px; flex-wrap: wrap; }
+.stars-big svg { width: 46px; height: 46px; }
+.stars-big svg.off { opacity: .25; }
+.score { margin: 0; color: var(--muted); }
+.songbox { width: 100%; border: 3px solid var(--line); border-radius: 20px; padding: 12px 14px; background: var(--bg); }
+.songbox h3 { font-size: 1rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.lyrics p { margin: 4px 0; font-size: 1.2rem; padding: 3px 10px; border-radius: 10px; color: var(--muted); transition: background .2s, color .2s; overflow-wrap: anywhere; }
+.lyrics p.lit { background: var(--sun); color: var(--ink); font-weight: 700; }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+.confetti i { position: absolute; top: -24px; width: 10px; height: 16px; border-radius: 2px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(115vh) rotate(720deg); } }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } .confetti { display: none; } }
+</style>
+
+<div id="app"></div>
+
+<script>
+(function () {
+  var KEY = 'countRead.v1';
+  var P = { name: '', sound: true, stars: 0, correct: {} };
+  try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) P = Object.assign(P, s); } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} }
+
+  var hasSpeech = ('speechSynthesis' in window) && typeof SpeechSynthesisUtterance !== 'undefined';
+  function say(t) {
+    if (!P.sound || !hasSpeech || !t) return;
+    try { speechSynthesis.cancel(); var u = new SpeechSynthesisUtterance(t); u.rate = 0.8; u.lang = 'en-US'; speechSynthesis.speak(u); } catch (e) {}
+  }
+
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    attrs = attrs || {};
+    for (var k in attrs) {
+      if (k === 'class') el.className = attrs[k];
+      else if (k === 'html') el.innerHTML = attrs[k];
+      else if (k === 'text') el.textContent = attrs[k];
+      else if (k.slice(0, 2) === 'on') el[k] = attrs[k];
+      else el.setAttribute(k, attrs[k]);
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null) continue;
+      el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return el;
+  }
+  function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rand(0, i); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function pick(a) { return a[rand(0, a.length - 1)]; }
+  function uniq(a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }); }
+  function mix(answer, pool, n) {
+    var others = shuffle(uniq(pool).filter(function (x) { return x !== answer; })).slice(0, n - 1);
+    return shuffle(others.concat([answer]));
+  }
+
+  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon fill="#FFC534" stroke="#B9860A" stroke-width="1.4" stroke-linejoin="round" points="12,2 14.9,8.6 22,9.3 16.6,14 18.2,21 12,17.3 5.8,21 7.4,14 2,9.3 9.1,8.6"/></svg>';
+  var SPEAKER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#1B2B4B" d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M15 8.5a5 5 0 0 1 0 7M17.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#1B2B4B" stroke-width="2" stroke-linecap="round"/></svg>';
+  var TROPHY = '<svg class="trophy" viewBox="0 0 100 100" aria-hidden="true"><path d="M28 12h44v24a22 22 0 0 1-44 0z" fill="#FFC534" stroke="#B9860A" stroke-width="3" stroke-linejoin="round"/><path d="M28 18H14c0 14 6 22 16 24M72 18h14c0 14-6 22-16 24" fill="none" stroke="#B9860A" stroke-width="4" stroke-linecap="round"/><rect x="44" y="58" width="12" height="14" fill="#FFC534" stroke="#B9860A" stroke-width="3"/><rect x="28" y="72" width="44" height="14" rx="3" fill="#6347E8" stroke="#3B2AA0" stroke-width="3"/><polygon points="50,20 53,28 61,28.6 55,34 57,42 50,38 43,42 45,34 39,28.6 47,28" fill="#fff" stroke="#B9860A" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+  function shape(kind) {
+    if (kind === 'star') return STAR;
+    if (kind === 'heart') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#D93F31" stroke="#8E2118" stroke-width="1.4" stroke-linejoin="round" d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="14" r="7.5" fill="#0F8F66" stroke="#095C42" stroke-width="1.4"/><path d="M12 7c0-2 1-3.5 3-4" fill="none" stroke="#5A3A1B" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="15.5" cy="4.6" rx="2.6" ry="1.4" fill="#6FD07F" transform="rotate(-25 15.5 4.6)"/></svg>';
+  }
+  var KINDS = ['star', 'heart', 'apple'];
+  function plain(list) { return list.map(function (v) { return { label: String(v), value: v }; }); }
+
+  function lvl(act) { return Math.min(2, Math.floor((P.correct[act] || 0) / 6)); }
+
+  /* ---------- number games ---------- */
+  function genCount(L) {
+    var max = [5, 10, 20][L];
+    var n = rand(L === 0 ? 1 : Math.max(3, max - 8), max);
+    var kind = pick(KINDS);
+    var pool = [];
+    for (var i = Math.max(1, n - 3); i <= n + 3; i++) pool.push(i);
+    return {
+      prompt: 'Tap each one to count. How many?',
+      say: 'Tap each one to count. How many are there?',
+      visual: function () {
+        var wrap = h('div', { class: 'shapes' });
+        var c = 0;
+        for (var i = 0; i < n; i++) {
+          (function () {
+            var num = h('span', { class: 'num' });
+            var b = h('button', { class: 'shape', type: 'button', 'aria-label': 'Tap to count' });
+            b.innerHTML = shape(kind);
+            b.appendChild(num);
+            b.onclick = function () {
+              if (b.classList.contains('counted')) return;
+              c++; num.textContent = c; b.classList.add('counted'); say(String(c));
+            };
+            wrap.appendChild(b);
+          })();
+        }
+        return wrap;
+      },
+      choices: plain(mix(n, pool, 4)),
+      answer: n
+    };
+  }
+
+  function miniGroup(n, kind, goneCount) {
+    var g = h('div', { class: 'mini' });
+    for (var i = 0; i < n; i++) {
+      var s = h('span', { class: 's' + (goneCount && i >= n - goneCount ? ' gone' : '') });
+      s.innerHTML = shape(kind);
+      g.appendChild(s);
+    }
+    return g;
+  }
+
+  function genAdd(L) {
+    var max = [5, 10, 10][L];
+    var a = rand(1, max - 1), b = rand(1, max - a), ans = a + b;
+    var k1 = pick(KINDS), k2 = pick(KINDS.filter(function (k) { return k !== k1; }));
+    var pool = []; for (var i = 0; i <= 10; i++) if (Math.abs(i - ans) <= 3 && i <= max + 1) pool.push(i);
+    return {
+      prompt: 'Put them together. How many in all?',
+      say: a + ' plus ' + b + '. How many in all?',
+      visual: function () {
+        return h('div', null,
+          h('div', { class: 'group-row' }, miniGroup(a, k1), h('span', { class: 'op', text: '+' }), miniGroup(b, k2)),
+          h('div', { class: 'eq', text: a + ' + ' + b + ' = ?' }));
+      },
+      choices: plain(mix(ans, pool, 3)),
+      answer: ans
+    };
+  }
+
+  function genSub(L) {
+    var max = [5, 10, 10][L];
+    var a = rand(2, max), b = rand(1, a - 1), ans = a - b, k = pick(KINDS);
+    var pool = []; for (var i = 0; i <= 10; i++) if (Math.abs(i - ans) <= 3) pool.push(i);
+    return {
+      prompt: 'Take some away. How many are left?',
+      say: a + ' take away ' + b + '. How many are left?',
+      visual: function () {
+        return h('div', null,
+          h('div', { class: 'group-row' }, miniGroup(a, k, b)),
+          h('div', { class: 'eq', text: a + ' − ' + b + ' = ?' }));
+      },
+      choices: plain(mix(ans, pool, 3)),
+      answer: ans
+    };
+  }
+
+  function seqVisual(items, hidx) {
+    var box = h('div', { class: 'seq', role: 'img', 'aria-label': 'A pattern with one missing' });
+    items.forEach(function (t, i) { box.appendChild(h('span', { class: i === hidx ? 'q' : '', text: i === hidx ? '?' : t })); });
+    return box;
+  }
+
+  function genNext(L) {
+    var step = L === 2 ? 10 : 1, items = [], s, i;
+    if (step === 10) s = rand(1, 6) * 10; else s = rand(1, (L === 0 ? 10 : 20) - 3);
+    for (i = 0; i < 4; i++) items.push(s + i * step);
+    var hidx = L === 0 ? rand(1, 3) : rand(0, 3);
+    var ans = items[hidx];
+    var pool = [ans, ans - step, ans + step, ans - 2 * step, ans + 2 * step].filter(function (x) { return x > 0; });
+    return {
+      prompt: step === 10 ? 'Count by tens. What number is missing?' : 'What number is missing?',
+      say: step === 10 ? 'Count by tens. What number is missing?' : 'What number is missing?',
+      visual: function () { return seqVisual(items, hidx); },
+      choices: plain(mix(ans, pool, 3)),
+      answer: ans
+    };
+  }
+
+  function side(label, n, kind) { return h('div', { class: 'side' }, h('b', { text: label }), miniGroup(n, kind)); }
+  function genMore(L) {
+    var max = [5, 10, 10][L], a, b;
+    do { a = rand(1, max); b = rand(1, max); } while (a === b || (L === 2 && Math.abs(a - b) > 2));
+    var k1 = pick(KINDS), k2 = pick(KINDS);
+    return {
+      prompt: 'Which side has more?',
+      say: 'Which side has more?',
+      visual: function () { return h('div', { class: 'vs' }, side('Left', a, k1), side('Right', b, k2)); },
+      choices: [{ label: 'Left', value: 'L' }, { label: 'Right', value: 'R' }],
+      answer: a > b ? 'L' : 'R',
+      cls: 'words'
+    };
+  }
+
+  var SHAPES = {
+    circle: '<circle cx="50" cy="50" r="40"/>',
+    square: '<rect x="14" y="14" width="72" height="72"/>',
+    triangle: '<polygon points="50,10 92,86 8,86"/>',
+    rectangle: '<rect x="6" y="26" width="88" height="48"/>',
+    hexagon: '<polygon points="50,6 88,28 88,72 50,94 12,72 12,28"/>'
+  };
+  function genShape(L) {
+    var pool = [['circle', 'square', 'triangle'], ['circle', 'square', 'triangle', 'rectangle'], ['circle', 'square', 'triangle', 'rectangle', 'hexagon']][L];
+    var name = pick(pool);
+    return {
+      prompt: 'What shape is this?',
+      say: 'What shape is this?',
+      speakText: 'What shape is this?',
+      reveal: 'It is a ' + name + '.',
+      visual: function () {
+        return h('div', { class: 'bigshape', html: '<svg viewBox="0 0 100 100" role="img" aria-label="A shape"><g style="fill:var(--a);stroke:#1B2B4B;stroke-width:3;stroke-linejoin:round">' + SHAPES[name] + '</g></svg>' });
+      },
+      choices: mix(name, pool, 3).map(function (v) { return { label: v, value: v }; }),
+      answer: name,
+      cls: 'words'
+    };
+  }
+
+  /* ---------- reading games ---------- */
+  var ALPHA = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  function genLetters(L) {
+    var size = [8, 16, 26][L];
+    var pool = ALPHA.slice(0, size);
+    var l = pick(pool);
+    return {
+      prompt: 'Find the small letter that matches.',
+      say: 'Find the small letter that matches the big letter ' + l,
+      speakText: 'The letter ' + l,
+      visual: function () { return h('div', { class: 'bigtext', text: l.toUpperCase() }); },
+      choices: plain(mix(l, pool, 3)),
+      answer: l
+    };
+  }
+
+  var SIGHT = [
+    ['the', 'a', 'I', 'to', 'and', 'is', 'we', 'see'],
+    ['like', 'can', 'my', 'go', 'you', 'are', 'look', 'he', 'she'],
+    ['come', 'said', 'was', 'have', 'they', 'with', 'for', 'play', 'little']
+  ];
+  function genSight(L) {
+    var pool = []; for (var i = 0; i <= L; i++) pool = pool.concat(SIGHT[i]);
+    var w = pick(L === 0 ? SIGHT[0] : SIGHT[L].concat(pool.slice(0, 4)));
+    var textOnly = !hasSpeech || !P.sound;
+    return {
+      prompt: textOnly ? 'Find the word: ' + w : 'Listen. Find the word.',
+      say: 'Find the word ' + w,
+      speakText: w,
+      reveal: 'The word is "' + w + '".',
+      visual: null,
+      choices: plain(mix(w, pool, 3)),
+      answer: w,
+      cls: 'words'
+    };
+  }
+
+  var WORDS = ['sun', 'cat', 'dog', 'pig', 'hat', 'bed', 'cup', 'fox', 'map', 'net', 'van', 'jam', 'top', 'leg', 'zip', 'wig', 'gum', 'rug', 'kit', 'fan', 'bug'];
+  function genFirst(L) {
+    var pool = WORDS.slice(0, [8, 14, 21][L]);
+    var w = pick(pool), ans = w.charAt(0);
+    var letters = uniq(pool.map(function (x) { return x.charAt(0); }).concat(['a', 'e', 'o', 'u', 'g', 'k', 'r', 's']));
+    return {
+      prompt: 'What letter does this word start with?',
+      say: 'What letter does the word ' + w + ' start with?',
+      speakText: w,
+      reveal: w + ' starts with "' + ans + '".',
+      visual: function () { return h('div', { class: 'bigword', text: w }); },
+      choices: plain(mix(ans, letters, 3)),
+      answer: ans
+    };
+  }
+
+  function genLast(L) {
+    var pool = WORDS.slice(0, [8, 14, 21][L]);
+    var w = pick(pool), ans = w.slice(-1);
+    var letters = uniq(pool.map(function (x) { return x.slice(-1); }).concat(['t', 'n', 'g', 'p', 'd', 'm', 'b']));
+    return {
+      prompt: 'What letter does this word end with?',
+      say: 'What letter does the word ' + w + ' end with?',
+      speakText: w,
+      reveal: w + ' ends with "' + ans + '".',
+      visual: function () { return h('div', { class: 'bigword', text: w }); },
+      choices: plain(mix(ans, letters, 3)),
+      answer: ans
+    };
+  }
+
+  var FAMILIES = [
+    ['cat', 'hat', 'mat', 'bat', 'rat'], ['sun', 'run', 'fun', 'bun'], ['pig', 'big', 'dig', 'wig'], ['bed', 'red', 'fed'],
+    ['bug', 'rug', 'hug', 'mug'], ['fan', 'van', 'can', 'man'], ['top', 'hop', 'mop'], ['dog', 'log', 'fog']
+  ];
+  function genRhyme(L) {
+    var fams = FAMILIES.slice(0, [4, 6, 8][L]);
+    var fam = pick(fams);
+    var pair = shuffle(fam).slice(0, 2), w = pair[0], ans = pair[1];
+    var otherWords = [];
+    fams.forEach(function (f) { if (f !== fam) otherWords = otherWords.concat(f); });
+    var choices = shuffle([ans].concat(shuffle(otherWords).slice(0, 2)));
+    return {
+      prompt: 'Which word rhymes with ' + w + '?',
+      say: 'Which word rhymes with ' + w + '?',
+      speakText: 'Which word rhymes with ' + w + '?',
+      reveal: w + ' and ' + ans + ' rhyme.',
+      visual: function () { return h('div', { class: 'bigword', text: w }); },
+      choices: plain(choices),
+      answer: ans,
+      cls: 'words'
+    };
+  }
+
+  function genAlpha(L) {
+    var size = [8, 16, 26][L];
+    var start = rand(0, size - 4);
+    var items = ALPHA.slice(start, start + 4).map(function (x) { return x.toUpperCase(); });
+    var hidx = L === 0 ? rand(1, 3) : rand(0, 3);
+    var ans = items[hidx], ai = start + hidx;
+    var pool = [];
+    for (var i = Math.max(0, ai - 3); i <= Math.min(25, ai + 3); i++) pool.push(ALPHA[i].toUpperCase());
+    return {
+      prompt: 'Which letter is missing?',
+      say: 'Which letter is missing from the alphabet?',
+      visual: function () { return seqVisual(items, hidx); },
+      choices: plain(mix(ans, pool, 3)),
+      answer: ans
+    };
+  }
+
+  var ACTS = {
+    count:   { name: 'Count It',       big: '1 2 3',       sub: 'Tap and count up to 20',          color: 'var(--coral)',  group: 'Numbers', gen: genCount },
+    add:     { name: 'Put Together',   big: '2 + 3',       sub: 'Adding up to 10',                 color: 'var(--leaf)',   group: 'Numbers', gen: genAdd },
+    sub:     { name: 'Take Away',      big: '5 − 2',  sub: 'Subtracting within 10',           color: 'var(--berry)',  group: 'Numbers', gen: genSub },
+    next:    { name: 'Missing Number', big: '3 4 _',       sub: 'Fill in the number',              color: 'var(--teal)',   group: 'Numbers', gen: genNext },
+    more:    { name: 'Which Is More',  big: '3 or 5',      sub: 'Compare two groups',              color: 'var(--orange)', group: 'Numbers', gen: genMore },
+    shape:   { name: 'Shape Names',    bigHtml: '<svg viewBox="0 0 40 40" width="44" height="44" aria-hidden="true"><polygon points="20,4 36,34 4,34" fill="#fff"/></svg>', sub: 'Circle, square, triangle and more', color: 'var(--indigo)', group: 'Numbers', gen: genShape },
+    letters: { name: 'Big and Small',  big: 'Aa',          sub: 'Match capital and small',         color: 'var(--sky)',    group: 'Reading', gen: genLetters },
+    sight:   { name: 'Sight Words',    big: 'the',         sub: 'Hear it, then find it',           color: 'var(--sun)', ink: 'var(--ink)', group: 'Reading', gen: genSight },
+    first:   { name: 'First Letters',  big: '_at',         sub: 'What does the word start with?',  color: 'var(--pink)',   group: 'Reading', gen: genFirst },
+    last:    { name: 'Last Letters',   big: 'ca_',         sub: 'What does the word end with?',    color: 'var(--plum)',   group: 'Reading', gen: genLast },
+    rhyme:   { name: 'Rhyme Time',     big: 'cat hat',     sub: 'Find the word that rhymes',       color: 'var(--olive)',  group: 'Reading', gen: genRhyme },
+    alpha:   { name: 'ABC Order',      big: 'A B _',       sub: 'Which letter comes next?',        color: 'var(--sienna)', group: 'Reading', gen: genAlpha }
+  };
+  var ROUND = 5;
+  var PRAISE = ['Great job!', 'You got it!', 'Super!', 'Nice work!', 'Awesome!', 'Yes!'];
+
+  /* ---------- winner song ---------- */
+  var songTimers = [], songCtx = null, songMaster = null;
+  function stopSong() {
+    songTimers.forEach(clearTimeout); songTimers = [];
+    try { if (songMaster) { songMaster.gain.value = 0; songMaster.disconnect(); songMaster = null; } } catch (e) {}
+    try { if (hasSpeech) speechSynthesis.cancel(); } catch (e) {}
+  }
+  function songLines(name, group) {
+    var skill = group === 'Numbers'
+      ? ['Counting up and adding, ' + name + '!', name + ' knows numbers so well!']
+      : ['Letters, words and sounds, ' + name + '!', name + ' can read so well!'];
+    return ['Hooray, hooray for ' + name + '!', skill[1], skill[0], name + ' is the winner today!'];
+  }
+  /* C major pentatonic, 8 beats per line */
+  var N = { C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880, C6: 1046.5 };
+  var PHRASES = [
+    [['G5', 1], ['G5', 1], ['A5', 1], ['G5', 1], ['E5', 1], ['E5', 1], ['D5', 1], ['C5', 1]],
+    [['E5', 1], ['E5', 1], ['G5', 1], ['A5', 1], ['G5', 2], ['E5', 2]],
+    [['A5', 1], ['A5', 1], ['G5', 1], ['E5', 1], ['D5', 1], ['E5', 1], ['G5', 1], ['A5', 1]],
+    [['C6', 2], ['A5', 1], ['G5', 1], ['E5', 1], ['D5', 1], ['C5', 2]]
+  ];
+  var BEAT = 0.4, LINE = BEAT * 8;
+  function playSong(name, group, lineEls) {
+    stopSong();
+    var lines = songLines(name, group);
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (P.sound && AC) {
+      try {
+        if (!songCtx) songCtx = new AC();
+        if (songCtx.resume) songCtx.resume();
+        songMaster = songCtx.createGain(); songMaster.gain.value = 0.55; songMaster.connect(songCtx.destination);
+        var t0 = songCtx.currentTime + 0.15;
+        PHRASES.forEach(function (ph, li) {
+          var t = t0 + li * LINE;
+          ph.forEach(function (nt) {
+            var dur = nt[1] * BEAT;
+            var o = songCtx.createOscillator(), g = songCtx.createGain();
+            o.type = 'triangle'; o.frequency.value = N[nt[0]];
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(0.1, t + 0.03);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.95);
+            o.connect(g); g.connect(songMaster);
+            o.start(t); o.stop(t + dur);
+            t += dur;
+          });
+          var bo = songCtx.createOscillator(), bg = songCtx.createGain();
+          bo.type = 'sine'; bo.frequency.value = li === 2 ? 196 : 130.8;
+          bg.gain.setValueAtTime(0.0001, t0 + li * LINE);
+          bg.gain.linearRampToValueAtTime(0.12, t0 + li * LINE + 0.05);
+          bg.gain.exponentialRampToValueAtTime(0.0001, t0 + (li + 1) * LINE - 0.1);
+          bo.connect(bg); bg.connect(songMaster);
+          bo.start(t0 + li * LINE); bo.stop(t0 + (li + 1) * LINE);
+        });
+      } catch (e) {}
+    }
+    lines.forEach(function (txt, i) {
+      songTimers.push(setTimeout(function () {
+        lineEls.forEach(function (el, j) { el.classList.toggle('lit', j === i); });
+        if (P.sound && hasSpeech) {
+          try {
+            speechSynthesis.cancel();
+            var u = new SpeechSynthesisUtterance(txt);
+            u.rate = 0.85; u.pitch = 1.5; u.lang = 'en-US';
+            speechSynthesis.speak(u);
+          } catch (e) {}
+        }
+      }, 150 + i * LINE * 1000));
+    });
+    songTimers.push(setTimeout(function () { lineEls.forEach(function (el) { el.classList.remove('lit'); }); }, 150 + lines.length * LINE * 1000));
+  }
+  function confetti() {
+    var box = h('div', { class: 'confetti', 'aria-hidden': 'true' });
+    var cols = ['#FFC534', '#D93F31', '#0F8F66', '#6347E8', '#1B73E0', '#C93A7F'];
+    for (var i = 0; i < 46; i++) {
+      var p = h('i');
+      p.style.left = rand(0, 100) + '%';
+      p.style.background = cols[i % cols.length];
+      p.style.animationDuration = (2.6 + Math.random() * 2.6).toFixed(2) + 's';
+      p.style.animationDelay = (Math.random() * 1.2).toFixed(2) + 's';
+      box.appendChild(p);
+    }
+    return box;
+  }
+
+  /* ---------- screens ---------- */
+  var app = document.getElementById('app');
+  function clear() { stopSong(); app.innerHTML = ''; }
+
+  function soundBtn() {
+    var b = h('button', { class: 'ghost', type: 'button', id: 'soundbtn', 'aria-pressed': String(!!P.sound) }, P.sound ? 'Sound: on' : 'Sound: off');
+    b.onclick = function () {
+      P.sound = !P.sound; save();
+      b.textContent = P.sound ? 'Sound: on' : 'Sound: off';
+      b.setAttribute('aria-pressed', String(!!P.sound));
+      if (!P.sound) stopSong();
+    };
+    return b;
+  }
+  function starsPill() {
+    var p = h('span', { class: 'pill', 'aria-label': 'Stars collected' });
+    p.innerHTML = STAR + '<span id="starcount">' + P.stars + '</span>';
+    return p;
+  }
+
+  function home() {
+    clear();
+    var greet = P.name ? 'Hi, ' + P.name + '!' : 'Hi there!';
+    var nameInput = h('input', { id: 'kidname', type: 'text', maxlength: '20', autocomplete: 'off', placeholder: 'Type your name' });
+    nameInput.value = P.name;
+    nameInput.onchange = function () { P.name = nameInput.value.trim(); save(); home(); };
+    app.appendChild(h('div', { class: 'top' }, starsPill(), soundBtn()));
+    app.appendChild(h('div', { class: 'hello' },
+      h('h1', { text: greet }),
+      h('p', { text: 'Pick a game. Finish five questions to win and hear your song.' })));
+    app.appendChild(h('div', { class: 'namebox' }, h('label', { for: 'kidname', text: 'My name is' }), nameInput));
+    app.appendChild(h('p', { class: 'namehint', text: 'Your name goes in the winner song.' }));
+
+    ['Numbers', 'Reading'].forEach(function (g) {
+      var tiles = h('div', { class: 'tiles' });
+      Object.keys(ACTS).forEach(function (k) {
+        var a = ACTS[k]; if (a.group !== g) return;
+        var big = h('span', { class: 'big' });
+        if (a.bigHtml) big.innerHTML = a.bigHtml; else big.textContent = a.big;
+        var t = h('button', { class: 'tile', type: 'button' }, big,
+          h('span', { class: 'name', text: a.name }),
+          h('span', { class: 'sub', text: a.sub }));
+        t.style.setProperty('--a', a.color);
+        if (a.ink) t.style.setProperty('--a-ink', a.ink);
+        t.onclick = function () { startRound(k); };
+        tiles.appendChild(t);
+      });
+      app.appendChild(h('section', { class: 'group' }, h('h2', { text: g }), tiles));
+    });
+
+    var gu = h('details', { class: 'grownups' }, h('summary', { text: 'For grown-ups' }),
+      h('div', { html:
+        '<p>There are 12 games. Each one is five questions, gets a little harder as your child answers more correctly, and ends with a winner screen, confetti and a short song that uses your child’s name. Progress and stars are saved in this browser only.</p>' +
+        '<ul>' +
+        '<li><b>Numbers:</b> Count It (objects up to 20), Put Together and Take Away (within 10), Missing Number (including counting by tens), Which Is More, and Shape Names.</li>' +
+        '<li><b>Reading:</b> Big and Small letters, Sight Words, First Letters, Last Letters, Rhyme Time, and ABC Order.</li>' +
+        '</ul>' +
+        '<p>These line up with the counting, adding, subtracting, shape, letter, rhyme and high-frequency word goals in Arizona’s kindergarten standards. Teachers choose their own sight word lists, so check your child’s class list and ask the teacher which words to focus on first.</p>' +
+        '<p>Tip: use the speaker button to hear a word, then ask your child to say it back. The song is sung by the device’s built-in voice. If sound does not play, turn up the volume or try another browser.</p>' }));
+    app.appendChild(gu);
+  }
+
+  var S = null;
+  function startRound(act) { S = { act: act, i: 0, first: 0, wrong: 0, answered: false, q: null }; nextQ(); }
+  function nextQ() {
+    if (S.i >= ROUND) return finish();
+    S.q = ACTS[S.act].gen(lvl(S.act));
+    S.wrong = 0; S.answered = false;
+    drawQ();
+    say(S.q.say);
+  }
+
+  function drawQ() {
+    clear();
+    var a = ACTS[S.act], q = S.q;
+    var scope = h('div');
+    scope.style.setProperty('--a', a.color);
+    if (a.ink) scope.style.setProperty('--a-ink', a.ink);
+
+    var back = h('button', { class: 'ghost', type: 'button', text: '‹ Home' });
+    back.onclick = home;
+    scope.appendChild(h('div', { class: 'top' }, back, starsPill()));
+
+    var dots = h('div', { class: 'dots', role: 'img', 'aria-label': 'Question ' + (S.i + 1) + ' of ' + ROUND });
+    for (var i = 0; i < ROUND; i++) dots.appendChild(h('span', { class: i < S.i ? 'on' : (i === S.i ? 'now' : '') }));
+    scope.appendChild(dots);
+
+    var card = h('div', { class: 'card', id: 'qcard' });
+    var promptRow = h('div', { class: 'row' });
+    var sp = h('button', { class: 'speak', type: 'button', 'aria-label': 'Hear it again' });
+    sp.innerHTML = SPEAKER;
+    sp.onclick = function () { say(q.speakText || q.say); };
+    if (hasSpeech) promptRow.appendChild(sp);
+    promptRow.appendChild(h('div', { class: 'prompt', text: q.prompt }));
+    card.appendChild(promptRow);
+
+    if (q.visual) card.appendChild(q.visual());
+
+    var fb = h('div', { class: 'feedback', 'aria-live': 'polite' });
+    var next = h('button', { class: 'next', type: 'button', text: S.i + 1 >= ROUND ? 'Finish' : 'Next' });
+    next.hidden = true;
+    next.onclick = function () { S.i++; nextQ(); };
+
+    var choices = h('div', { class: 'choices' });
+    q.choices.forEach(function (c) {
+      var b = h('button', { class: 'choice' + (q.cls ? ' ' + q.cls : ''), type: 'button', text: c.label });
+      b.onclick = function () {
+        if (S.answered) return;
+        if (c.value === q.answer) {
+          S.answered = true;
+          b.classList.add('right');
+          if (S.wrong === 0) S.first++;
+          P.stars++; P.correct[S.act] = (P.correct[S.act] || 0) + 1; save();
+          var sc = document.getElementById('starcount'); if (sc) sc.textContent = P.stars;
+          var msg = pick(PRAISE);
+          fb.className = 'feedback ok'; fb.textContent = msg;
+          choices.querySelectorAll('button').forEach(function (x) { if (x !== b) x.disabled = true; });
+          card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
+          next.hidden = false; next.focus();
+          say(msg);
+        } else {
+          S.wrong++;
+          b.classList.add('wrong'); b.disabled = true;
+          fb.className = 'feedback no';
+          fb.textContent = (q.reveal && S.wrong >= 2) ? q.reveal : 'Not quite. Try again!';
+          say(S.wrong >= 2 && q.reveal ? q.reveal : 'Try again');
+        }
+      };
+      choices.appendChild(b);
+    });
+    card.appendChild(choices);
+    card.appendChild(fb);
+    card.appendChild(next);
+    scope.appendChild(card);
+    app.appendChild(scope);
+  }
+
+  function finish() {
+    clear();
+    var a = ACTS[S.act];
+    var name = P.name || 'Champion';
+    var scope = h('div'); scope.style.setProperty('--a', a.color);
+    if (a.ink) scope.style.setProperty('--a-ink', a.ink);
+    scope.appendChild(h('div', { class: 'top' }, h('span'), starsPill()));
+
+    var stars = h('div', { class: 'stars-big', 'aria-hidden': 'true' });
+    for (var i = 0; i < ROUND; i++) { var d = h('span'); d.innerHTML = STAR; if (i >= S.first) d.firstChild.setAttribute('class', 'off'); stars.appendChild(d); }
+
+    var lines = songLines(name, a.group);
+    var lyrics = h('div', { class: 'lyrics' });
+    var lineEls = lines.map(function (t) { var p = h('p', { text: t }); lyrics.appendChild(p); return p; });
+
+    var sing = h('button', { class: 'next', type: 'button', text: 'Sing it again' });
+    sing.onclick = function () { playSong(name, a.group, lineEls); };
+    var again = h('button', { class: 'ghost', type: 'button', text: 'Play ' + a.name + ' again' });
+    again.onclick = function () { startRound(S.act); };
+    var homeBtn = h('button', { class: 'ghost', type: 'button', text: 'Back to games' });
+    homeBtn.onclick = home;
+
+    var trophy = h('div', { html: TROPHY });
+    var card = h('div', { class: 'card winner' },
+      trophy,
+      h('div', { class: 'banner', text: name + ' is the winner!' }),
+      stars,
+      h('p', { class: 'score', text: S.first + ' of ' + ROUND + ' right on the first try. You finished all ' + ROUND + '.' }),
+      h('div', { class: 'songbox' }, h('h3', { text: 'The ' + name + ' song' }), lyrics),
+      h('div', { class: 'row' }, sing, again, homeBtn));
+    if (!P.name) card.appendChild(h('p', { class: 'namehint', text: 'Add your name on the home page to hear your own song.' }));
+    scope.appendChild(card);
+    scope.appendChild(confetti());
+    app.appendChild(scope);
+    playSong(name, a.group, lineEls);
+  }
+
+  home();
+})();
+</script>
+
+</body></html>
