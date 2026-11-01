@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Miracle’s Desert Quest</title>
+<style>
+:root{--bg:#fff4df;--card:#ffffff;--ink:#2b2118;--mut:#7a6a58;--pri:#e2662d;--ok:#2e9e5b;--bad:#d64545;--line:#f0d9b8;--okbg:#dff5e6;--badbg:#fbe0e0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1812;--card:#2a231b;--ink:#f6ecdc;--mut:#b9a88f;--line:#43382a;--pri:#f08048;--okbg:#1f3a2a;--badbg:#44211f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1d1812;--card:#2a231b;--ink:#f6ecdc;--mut:#b9a88f;--line:#43382a;--pri:#f08048;--okbg:#1f3a2a;--badbg:#44211f;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.pill{background:var(--card);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700}
+h1{font-size:1.7rem;margin:6px 0 2px}
+.sub{color:var(--mut);margin:0 0 14px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.modes{display:grid;gap:12px}
+.mode{display:flex;align-items:center;gap:14px;text-align:left;width:100%;font:inherit;color:inherit;cursor:pointer;background:var(--card);border:3px solid var(--line);border-radius:18px;padding:16px}
+.mode:hover,.mode:focus-visible{border-color:var(--pri)}
+.mode .e{font-size:2.4rem}.mode b{font-size:1.2rem;display:block}.mode span.s{color:var(--mut);font-size:.9rem}
+.bar{height:12px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:12px}
+.bar i{display:block;height:100%;background:var(--pri);transition:width .3s}
+.passage{background:var(--bg);border-left:6px solid var(--pri);border-radius:8px;padding:10px 12px;margin-bottom:12px;line-height:1.5;font-size:1.05rem}
+.q{font-size:1.4rem;font-weight:700;margin:4px 0 14px;line-height:1.35}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;font-size:1.15rem;font-weight:700;color:inherit;background:var(--card);border:3px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--pri)}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}.opt.bad{background:var(--badbg);border-color:var(--bad)}
+.btn{font:inherit;font-weight:800;font-size:1.1rem;background:var(--pri);color:#fff;border:0;border-radius:14px;padding:14px 22px;cursor:pointer;width:100%;margin-top:12px}
+.btn.alt{background:var(--card);color:var(--ink);border:3px solid var(--line)}
+.fb{margin-top:12px;padding:12px;border-radius:12px;font-weight:700;line-height:1.4}
+.fb.ok{background:var(--okbg)}.fb.bad{background:var(--badbg)}
+.big{font-size:3.2rem;text-align:center}.c{text-align:center}
+.mus{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;border:3px solid var(--line);background:var(--card);font-size:1.4rem;cursor:pointer;z-index:5}
+.lv{display:flex;gap:8px;flex-wrap:wrap;color:var(--mut);font-size:.9rem}
+</style></head>
+<body><main id="app"></main><button class="mus" id="mus" aria-label="Turn music on or off">🎵</button>
+<script>
+const $=s=>document.querySelector(s),R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=R(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+let S={stars:0,lvl:{math:1,read:1}};
+try{const x=JSON.parse(localStorage.getItem("dq")||"null");if(x)S=Object.assign(S,x)}catch(e){}
+const save=()=>{try{localStorage.setItem("dq",JSON.stringify(S))}catch(e){}};
+const RANKS=[[0,"Pebble Pal"],[25,"Cactus Scout"],[100,"Roadrunner"],[250,"Canyon Champion"],[500,"Desert Legend"]];
+const rank=()=>RANKS.filter(r=>S.stars>=r[0]).pop()[1];
+const nextRank=()=>RANKS.find(r=>r[0]>S.stars);
+
+/* ---------- Math ---------- */
+function nums(a,sp){const s=new Set([a]);let t=0;while(s.size<4&&t++<80){const d=R(1,sp)*(R(0,1)?1:-1);if(a+d>=0)s.add(a+d)}return shuf([...s]).map(String)}
+const M={
+ mul(l){const m=l==1?[2,3,4,5,10]:l==2?[2,3,4,5,6,7,8,9]:[6,7,8,9,10,11,12];const a=m[R(0,m.length-1)],b=R(2,l==3?12:10),p=a*b;return{q:a+" × "+b+" = ?",a:String(p),o:nums(p,Math.max(4,a)),h:"Skip count by "+a+", "+b+" times."}},
+ div(l){const a=R(2,l==3?12:9),b=R(2,l==3?12:9);return{q:(a*b)+" ÷ "+a+" = ?",a:String(b),o:nums(b,3),h:"Think: "+a+" × ? = "+(a*b)}},
+ addsub(l){const mx=[100,500,1000][l-1];if(R(0,1)){const a=R(10,mx-20),b=R(10,mx-a);return{q:a+" + "+b+" = ?",a:String(a+b),o:nums(a+b,12),h:"Add the ones, then tens, then hundreds. Regroup when you get 10 or more."}}const a=R(30,mx-1),b=R(10,a);return{q:a+" − "+b+" = ?",a:String(a-b),o:nums(a-b,12),h:"Subtract place by place. Borrow from the next place if you need to."}},
+ round(l){const p=l<3?10:100,n=l==1?R(11,99):R(101,999),a=Math.round(n/p)*p;return{q:"Round "+n+" to the nearest "+p+".",a:String(a),o:shuf([a,a+p,a-p,a+2*p].filter(x=>x>=0)).slice(0,4).map(String),h:"Look at the digit to the right. 5 or more? Round up. 4 or less? Stay."}},
+ area(l){const mx=l==1?6:l==2?9:12,w=R(2,mx),h=R(2,mx);return{q:"A rectangle is "+w+" units long and "+h+" units wide. What is its area (square units)?",a:String(w*h),o:nums(w*h,Math.max(4,w)),h:"Area = length × width. Not the same as adding the sides!"}},
+ frac(l){const d=[2,3,4,6,8],i=R(0,4);let j=R(0,4);while(j==i)j=R(0,4);const big=R(0,1),a=d[i],b=d[j];const want=big?Math.min(a,b):Math.max(a,b);return{q:"Which fraction is "+(big?"bigger":"smaller")+": 1/"+a+" or 1/"+b+"?",a:"1/"+want,o:shuf(["1/"+a,"1/"+b]),h:"The more pieces a whole is cut into, the smaller each piece is."}},
+ word(l){if(R(0,1)){const a=R(2,l==1?5:9),b=R(2,l==1?5:9);return{q:"There are "+a+" boxes with "+b+" markers in each box. How many markers in all?",a:String(a*b),o:nums(a*b,4),h:"Equal groups means multiply."}}const a=R(2,l==1?5:9),b=R(2,l==1?5:9);return{q:(a*b)+" stickers are shared equally among "+a+" friends. How many does each friend get?",a:String(b),o:nums(b,3),h:"Sharing equally means divide."}}
+};
+const MP={1:["mul","addsub","round","word"],2:["mul","div","addsub","round","area","frac","word"],3:["mul","div","addsub","round","area","frac","word","word"]};
+
+/* ---------- Reading ---------- */
+const PASS=[
+{p:"The saguaro cactus grows in the Sonoran Desert near Tucson. It can live for more than 150 years. A saguaro does not grow its first arm until it is about 70 years old. Its thick skin stores water from summer rains, so it can survive long dry spells.",
+ qs:[["What is this passage mostly about?",["How the saguaro cactus lives in the desert","How to plant a garden","Why rain is dangerous","Animals that live in Tucson"],"Ask: what is the whole passage talking about, not just one sentence?"],
+     ["About how old is a saguaro when it grows its first arm?",["70 years","10 years","150 years","5 years"],"Find the sentence about the first arm."]]},
+{p:"A roadrunner is a bird that would rather run than fly. It can sprint as fast as 20 miles per hour. Roadrunners eat insects, lizards, and even small snakes. Their long tails help them turn quickly while they chase a meal.",
+ qs:[["Why does a roadrunner have a long tail?",["It helps the bird turn quickly","It helps the bird fly higher","It keeps the bird warm","It helps the bird swim"],"Look for the word “tails” in the last sentence."],
+     ["Which of these does a roadrunner NOT eat?",["Watermelon","Lizards","Insects","Small snakes"],"Check the list in the third sentence."]]},
+{p:"Mia wanted to win the school spelling bee. Every night she practiced her words with her dad. On the day of the contest, her hands shook as she walked on stage. She took a deep breath, smiled, and spelled “necessary” without a mistake.",
+ qs:[["How did Mia feel when she walked on stage?",["Nervous","Bored","Angry","Sleepy"],"Shaking hands are a clue about her feelings."],
+     ["Why was Mia able to spell the word correctly?",["She practiced every night","She was lucky","The word was easy","Her dad spelled it"],"Think about what she did before the contest."]]},
+{p:"In July, dark clouds roll over southern Arizona. Then the monsoon storms begin. Thunder booms, wind blows dust through the air, and rain pours down in minutes. Afterward the desert smells fresh, and the washes fill with rushing water.",
+ qs:[["What happens first, before the storm begins?",["Dark clouds roll in","The washes fill with water","The desert smells fresh","Rain pours down"],"Words like “then” and “afterward” tell the order."],
+     ["What can you tell about a monsoon storm?",["It is loud and fast","It is quiet and slow","It lasts all year","It only happens in winter"],"Thunder booms and rain pours in minutes."]]}];
+const VOC=[
+["The tiny ant was so minuscule that I could barely see it.","minuscule",["very small","very loud","very fast","very old"]],
+["Dad was exhausted after hiking all day, so he fell asleep right away.","exhausted",["very tired","very hungry","very happy","very cold"]],
+["The desert is arid, so it hardly ever rains.","arid",["very dry","very wet","very cold","very green"]],
+["She was reluctant to jump in the cold pool and stood at the edge for a long time.","reluctant",["not wanting to","excited","able to","ready"]],
+["The generous teacher gave every student a sticker.","generous",["happy to give","grumpy","sleepy","strict"]],
+["The path was treacherous, with loose rocks and steep drops.","treacherous",["dangerous","pretty","short","flat"]],
+["Our class will observe the ants with a magnifying glass.","observe",["watch carefully","throw away","paint","count loudly"]],
+["The scientist made a prediction about what would happen next.","prediction",["a guess about the future","a lost key","a loud noise","a cold drink"]]];
+const AFX=[
+["What does the prefix “un-” mean in the word “unhappy”?",["not","again","full of","without"],"Unhappy = not happy."],
+["What does the prefix “re-” mean in the word “rewrite”?",["again","not","before","full of"],"Rewrite = write again."],
+["What does the suffix “-ful” mean in the word “careful”?",["full of","without","again","not"],"Careful = full of care."],
+["What does the suffix “-less” mean in the word “hopeless”?",["without","full of","again","before"],"Hopeless = without hope."]];
+function readBank(l){const v=VOC.map(x=>({p:x[0],q:"What does “"+x[1]+"” mean?",a:x[2][0],o:shuf(x[2]),h:"Use the other words in the sentence as clues."}));
+ const a=AFX.map(x=>({p:null,q:x[0],a:x[1][0],o:shuf(x[1]),h:x[2]}));
+ const ps=[];PASS.forEach(P=>P.qs.forEach(q=>ps.push({p:P.p,q:q[0],a:q[1][0],o:shuf(q[1]),h:q[2]})));
+ return l==1?v.concat(a):l==2?v.concat(ps):ps.concat(v.slice(0,3));}
+
+/* ---------- Game ---------- */
+let g=null,used=new Set();
+function makeQ(sub){const l=S.lvl[sub];if(sub=="math"){const k=MP[l][R(0,MP[l].length-1)];const x=M[k](l);x.sub="math";return x}
+ const b=readBank(l);let it,t=0;do{it=b[R(0,b.length-1)]}while(used.has(it.q)&&t++<30);used.add(it.q);it.sub="read";return it}
+function start(mode){g={mode,i:0,score:0,streak:0,cr:0,wr:0,earned:0,msg:""};used=new Set();ask()}
+function ask(){const sub=g.mode=="mix"?(g.i%2?"read":"math"):g.mode;g.q=makeQ(sub);g.done=false;draw()}
+function draw(){const q=g.q,lv=S.lvl[q.sub];
+ $("#app").innerHTML=`<div class="top"><button class="pill" onclick="home()" aria-label="Back home">← Home</button><span class="pill">⭐ ${S.stars}</span><span class="pill">🔥 ${g.streak}</span></div>
+ <div class="bar"><i style="width:${g.i/10*100}%"></i></div>
+ <div class="lv"><span>${q.sub=="math"?"🧮 Math":"📖 Reading"} · Level ${lv}</span><span>Question ${g.i+1} of 10</span></div>
+ <div class="card">${q.p?`<div class="passage">${q.p}</div>`:""}<div class="q">${q.q}</div>
+ <div class="opts">${q.o.map((o,i)=>`<button class="opt" data-i="${i}">${o}</button>`).join("")}</div>
+ <div id="fb"></div></div>`;
+ document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>pick(+b.dataset.i))}
+function pick(i){if(g.done)return;g.done=true;const q=g.q,ok=q.o[i]===q.a;
+ document.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(q.o[k]===q.a)b.classList.add("ok");else if(k===i)b.classList.add("bad")});
+ const sub=q.sub;let note="";
+ if(ok){g.score++;g.streak++;g.cr++;g.wr=0;S.stars++;g.earned++;
+  if(g.streak%5==0){S.stars++;g.earned++;note=" 🔥 Streak bonus +1 star!"}
+  if(g.cr>=4&&S.lvl[sub]<12){S.lvl[sub]++;g.cr=0;note+=" 🚀 Level up!"}
+  $("#fb").innerHTML=`<div class="fb ok">${["Great job!","You got it!","Super smart!","Yes! Nice work!"][R(0,3)]} +1 ⭐${note}</div>`}
+ else{g.streak=0;g.wr++;g.cr=0;if(g.wr>=2&&S.lvl[sub]>1){S.lvl[sub]--;g.wr=0}
+  $("#fb").innerHTML=`<div class="fb bad">Almost! The answer is <u>${q.a}</u>.<br>💡 ${q.h}</div>`}
+ save();sfx(ok);g.i++;
+ $("#fb").insertAdjacentHTML("beforeend",`<button class="btn" id="nx">${g.i>=10?"See my results":"Next question →"}</button>`);
+ $("#nx").onclick=()=>g.i>=10?finish():ask();$("#nx").focus()}
+function finish(){let bonus=0;if(g.score==10){bonus=3;S.stars+=3}save();
+ const s=g.score,e=s==10?"🏆":s>=8?"🌟":s>=6?"👏":"💪";
+ const m=s==10?"Perfect round, Miracle! Desert Legend energy!":s>=8?"Amazing work, Miracle!":s>=6?"Nice job! Keep practicing and you’ll level up.":"Every mistake helps your brain grow. Try again!";
+ $("#app").innerHTML=`<div class="card c"><div class="big">${e}</div><h1>${s} out of 10</h1><p class="sub">${m}</p>
+ <p><b>+${g.earned+bonus} ⭐ earned</b>${bonus?" (includes +3 perfect bonus!)":""}</p><p>Rank: <b>${rank()}</b></p>
+ <button class="btn" onclick="start('${g.mode}')">Play again</button><button class="btn alt" onclick="home()">Home</button></div>`}
+function home(){const n=nextRank();
+ $("#app").innerHTML=`<div class="top"><span class="pill">⭐ ${S.stars}</span><span class="pill">🏅 ${rank()}</span></div>
+ <h1>🌵 Miracle’s Desert Quest</h1><p class="sub">Explorer: <b>Miracle Exom</b> · Pick a trail! ${n?`${n[0]-S.stars} more ⭐ to become <b>${n[1]}</b>.`:"You reached the top rank!"}</p>
+ <div class="modes">
+ <button class="mode" onclick="start('math')"><span class="e">🧮</span><span><b>Math Mesa</b><span class="s">Times tables, division, fractions, area, rounding<br>Level ${S.lvl.math} of 12</span></span></button>
+ <button class="mode" onclick="start('read')"><span class="e">📖</span><span><b>Reading Ridge</b><span class="s">Stories, main idea, vocabulary, word parts<br>Level ${S.lvl.read} of 12</span></span></button>
+ <button class="mode" onclick="start('mix')"><span class="e">🏜️</span><span><b>Daily Challenge</b><span class="s">A mix of both. 10 questions, about 5 minutes</span></span></button></div>
+ <p class="sub" style="margin-top:16px">Tip: 10 minutes a day beats a long session once a week. Progress saves on this device.</p>`}
+/* ---------- 12 levels ---------- */
+const oR=M.round,oA=M.area,oW=M.word,mn=Math.min,T=lv=>lv<=4?1:lv<=8?2:3;
+M.mul=lv=>{const a=R(2,mn(12,2+Math.ceil(lv*.8))),b=R(2,mn(12,3+lv)),p=a*b;return{q:a+" × "+b+" = ?",a:String(p),o:nums(p,Math.max(4,a)),h:"Skip count by "+a+", "+b+" times."}};
+M.div=lv=>{const a=R(2,mn(12,2+Math.ceil(lv*.8))),b=R(2,mn(12,3+lv));return{q:(a*b)+" ÷ "+a+" = ?",a:String(b),o:nums(b,3),h:"Think: "+a+" × ? = "+(a*b)}};
+M.addsub=lv=>{const m=mn(1000,60+lv*85);if(R(0,1)){const a=R(10,m-20),b=R(10,m-a);return{q:a+" + "+b+" = ?",a:String(a+b),o:nums(a+b,12),h:"Add the ones, then tens, then hundreds. Regroup when you get 10 or more."}}const a=R(30,m-1),b=R(10,a);return{q:a+" − "+b+" = ?",a:String(a-b),o:nums(a-b,12),h:"Subtract place by place. Borrow from the next place if you need to."}};
+M.round=lv=>oR(lv<=3?1:lv<=8?2:3);M.area=lv=>oA(T(lv));M.word=lv=>oW(T(lv));
+PASS.push({p:"Javelinas look like small wild pigs, but they are not pigs at all. They travel in groups called herds and search for roots, fruit, and prickly pear. Javelinas have poor eyesight, so they use their strong sense of smell to find food and stay safe.",qs:[["What is true about javelinas?",["They are not really pigs","They have excellent eyesight","They always live alone","They only eat meat"],"Read the first sentence again."],["How do javelinas find food?",["By using their sense of smell","By using their eyesight","By following people","By flying"],"Poor eyesight is a clue to what they rely on instead."]]});
+const VH=[["The explorer’s journey was arduous, with steep hills and little water.","arduous",["very hard","very easy","very short","very fun"]],["The cactus is resilient and bounces back after a long drought.","resilient",["able to recover","easily broken","very loud","very light"]],["The hikers were cautious near the edge of the cliff.","cautious",["careful","careless","sleepy","silly"]],["The twins looked identical, so no one could tell them apart.","identical",["exactly alike","very different","far away","very tall"]],["Rain is scarce in the desert, so every drop matters.","scarce",["hard to find","everywhere","very loud","very warm"]]];
+function readBank(l){const mk=x=>({p:x[0],q:"What does “"+x[1]+"” mean?",a:x[2][0],o:shuf(x[2]),h:"Use the other words in the sentence as clues."});
+ const v=VOC.map(mk),h=VH.map(mk),a=AFX.map(x=>({p:null,q:x[0],a:x[1][0],o:shuf(x[1]),h:x[2]}));
+ const ps=[];PASS.forEach(P=>P.qs.forEach(q=>ps.push({p:P.p,q:q[0],a:q[1][0],o:shuf(q[1]),h:q[2]})));
+ return l<=4?v.concat(a):l<=8?v.concat(ps):ps.concat(h)}
+function makeQ(sub){const l=S.lvl[sub];let x;if(sub=="math"){const p=["mul","addsub","word"];if(l>=3)p.push("round");if(l>=4)p.push("area");if(l>=5)p.push("div");if(l>=6)p.push("frac");if(l>=8)p.push("div","mul");x=M[p[R(0,p.length-1)]](l)}else{const b=readBank(l);let t=0;do{x=b[R(0,b.length-1)]}while(used.has(x.q)&&t++<30);used.add(x.q)}x.sub=sub;return x}
+/* ---------- Music ---------- */
+const Mu={ctx:null,on:false,t:0,bar:0,step:0,mi:2,timer:null,g:null,
+ start(){try{if(!this.ctx){const C=window.AudioContext||window.webkitAudioContext;this.ctx=new C();this.g=this.ctx.createGain();this.g.gain.value=.14;this.g.connect(this.ctx.destination)}
+  if(this.ctx.state=="suspended")this.ctx.resume();if(this.on)return;this.on=true;this.t=this.ctx.currentTime+.1;this.timer=setInterval(()=>this.sched(),200)}catch(e){}},
+ stop(){this.on=false;clearInterval(this.timer);try{this.ctx&&this.ctx.suspend()}catch(e){}},
+ note(f,t,d,type,v){const c=this.ctx,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(this.g);o.start(t);o.stop(t+d+.05)},
+ sched(){const BASS=[130.81,110,87.31,98],P=[523.25,587.33,659.25,783.99,880,1046.5];
+  while(this.t<this.ctx.currentTime+.6){if(this.step%4==0)this.note(BASS[this.bar%4],this.t,1,"sine",.7);
+   if(Math.random()<.65){this.mi=Math.max(0,mn(5,this.mi+R(-2,2)));this.note(P[this.mi],this.t,.5,"triangle",.5)}
+   this.step++;if(this.step==8){this.step=0;this.bar++}this.t+=.3}}};
+function sfx(ok){if(S.sound===false||!Mu.ctx||!Mu.on)return;const t=Mu.ctx.currentTime+.02;if(ok){Mu.note(660,t,.25,"sine",.9);Mu.note(880,t+.12,.35,"sine",.9)}else Mu.note(200,t,.4,"triangle",.7)}
+$("#mus").textContent=S.sound===false?"🔇":"🎵";
+$("#mus").onclick=()=>{S.sound=(S.sound===false);save();$("#mus").textContent=S.sound?"🎵":"🔇";S.sound?Mu.start():Mu.stop()};
+document.addEventListener("pointerdown",()=>{if(S.sound!==false)Mu.start()},{once:true});
+home();
+</script></body></html>
